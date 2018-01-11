@@ -104,6 +104,18 @@ impl IDA {
         self
     }
 
+    /// Returns `true` if the IDA instance will run without a GUI (i.e. it
+    /// will be headless).
+    pub fn is_headless(&self) -> bool {
+        self.mode == Mode::Headless
+    }
+
+    /// Returns `true` if the IDA instance will support loading 64-bit
+    /// binaries.
+    pub fn is_64bit(&self) -> bool {
+        self.bits == Bits::Bits64
+    }
+
     /// Runs the script with the contents given as `script` on the `target`
     /// executable.
     pub fn run(&self, script: &str, target: &str) -> Result<bool> {

@@ -20,10 +20,10 @@ static main()
 "#;
 
 fn main() {
-    let ida = IDA::new("/home/slt/bin/ida-6.8/idaq64")
+    let ida = IDA::new("idaq64")
         .unwrap()
         .script_type(Type::IDC);
 
-    println!("{:?}", ida.run(SCRIPT, "/tmp/test"));
+    println!("{:?}", ida.run(SCRIPT, "test"));
 }
 ```

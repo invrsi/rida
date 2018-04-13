@@ -75,10 +75,6 @@ impl IDA {
     /// 64-bit mode, whereas `idaq` will run with a graphical interface in
     /// 32-bit mode.
     pub fn new(ida_path: &str) -> Result<IDA, FError> {
-        if !Path::new(ida_path).exists() {
-            Err(Error::InvalidPath { path: ida_path.to_owned() })?;
-        }
-
         CAPABILITIES.captures(ida_path)
             .map(|caps| IDA {
                 exec: ida_path.to_owned(),

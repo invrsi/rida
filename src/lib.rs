@@ -2,11 +2,12 @@
 //! scripts represented as strings.
 
 #[macro_use]
-extern crate error_chain;
-#[macro_use]
 extern crate lazy_static;
 extern crate regex;
 extern crate tempfile;
+extern crate failure;
+#[macro_use]
+extern crate failure_derive;
 
 use std::path::Path;
 use std::fs::remove_file;
@@ -16,17 +17,14 @@ use std::io::Write;
 use regex::Regex;
 use tempfile::NamedTempFileOptions;
 
-error_chain! {
-    foreign_links {
-        Io(std::io::Error);
-    }
+use failure::Error as FError;
 
-    errors {
-        InvalidPath {
-            description("invalid path to IDA executable"),
-            display("invalid path to IDA executable"),
-        }
-    }
+#[derive(Debug, Fail)]
+enum Error {
+    #[fail(display = "invalid path to IDA executable: {}", path)]
+    InvalidPath {
+        path: String,
+    },
 }
 
 /// IDA analysis capability.
@@ -76,9 +74,9 @@ impl IDA {
     /// the given IDA executable. For instance: `idal64` will run headless in
     /// 64-bit mode, whereas `idaq` will run with a graphical interface in
     /// 32-bit mode.
-    pub fn new(ida_path: &str) -> Result<IDA> {
+    pub fn new(ida_path: &str) -> Result<IDA, FError> {
         if !Path::new(ida_path).exists() {
-            Err(ErrorKind::InvalidPath)?;
+            Err(Error::InvalidPath { path: ida_path.to_owned() })?;
         }
 
         CAPABILITIES.captures(ida_path)
@@ -89,7 +87,7 @@ impl IDA {
                 remove_database: true,
                 script_type: Type::Python,
             })
-            .ok_or(ErrorKind::InvalidPath.into())
+            .ok_or(Error::InvalidPath { path: ida_path.to_owned() }.into())
     }
 
     /// Sets if the IDA database is removed upon script completion.
@@ -118,7 +116,7 @@ impl IDA {
 
     /// Runs the script with the contents given as `script` on the `target`
     /// executable.
-    pub fn run(&self, script: &str, target: &str) -> Result<bool> {
+    pub fn run(&self, script: &str, target: &str) -> Result<bool, FError> {
         let mut script_file = NamedTempFileOptions::new()
             .suffix(if self.script_type == Type::Python { ".py" } else { ".idc" })
             .create()?;
